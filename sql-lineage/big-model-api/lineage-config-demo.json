@@ -1,0 +1,35 @@
+{
+  "currentTable": "dws_order_summary",
+  "lineageMappings": [
+    {
+      "currentField": "order_id",
+      "upstreamTable": "dwd_order_info",
+      "upstreamFields": "order_id"
+    },
+    {
+      "currentField": "avg_price",
+      "upstreamTable": "dwd_order_info",
+      "upstreamFields": "sale_price"
+    },
+    {
+      "currentField": "avg_price",
+      "upstreamTable": "dwd_order_info",
+      "upstreamFields": "sales_volume"
+    },
+    {
+      "currentField": "retention_rate",
+      "upstreamTable": "dws_user_behavior_daily",
+      "upstreamFields": "active_users"
+    },
+    {
+      "currentField": "retention_rate",
+      "upstreamTable": "dws_user_behavior_daily",
+      "upstreamFields": "new_users"
+    },
+    {
+      "currentField": "retention_rate",
+      "upstreamTable": "dws_user_behavior_daily",
+      "upstreamFields": "return_users"
+    }
+  ]
+}

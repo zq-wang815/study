@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(lsof -iTCP -sTCP:LISTEN -P -n)",
+      "Bash(awk 'NR==1 || /java/ || /node/ || /python/ || /gradle/ || /maven/ || /npm/')",
+      "Bash(awk '{print $1, $2, $9}')",
+      "Bash(ps *)",
+      "Bash(awk '/java/ || /node/')",
+      "Bash(awk 'NR>1 {print $1, $2, $9}')",
+      "Bash(lsof -iTCP:8000 -sTCP:LISTEN -P -n)",
+      "Bash(lsof -iTCP:3000 -sTCP:LISTEN -P -n)",
+      "Bash(grep *)"
+    ]
+  }
+}

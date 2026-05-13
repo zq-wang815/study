@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL 血缘分析</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; height: 100vh; display: flex; }
+.left { width: 420px; background: #fff; border-right: 1px solid #e0e0e0; padding: 20px; display: flex; flex-direction: column; gap: 12px; flex-shrink: 0; }
+.left h2 { font-size: 18px; color: #333; }
+.left textarea { flex: 1; border: 1px solid #d0d0d0; border-radius: 6px; padding: 12px; font-family: 'SF Mono', 'Monaco', 'Menlo', monospace; font-size: 13px; resize: none; outline: none; }
+.left textarea:focus { border-color: #4a90d9; }
+.left button { height: 40px; background: #4a90d9; color: #fff; border: none; border-radius: 6px; font-size: 15px; cursor: pointer; }
+.left button:hover { background: #357abd; }
+.left button:disabled { background: #a0c4e8; cursor: not-allowed; }
+.right { flex: 1; position: relative; overflow: hidden; }
+.right svg { width: 100%; height: 100%; }
+.tooltip { position: absolute; background: rgba(0,0,0,0.8); color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 12px; pointer-events: none; display: none; }
+.error { color: #e74c3c; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<div class="left">
+  <h2>SQL 血缘分析</h2>
+  <textarea id="sqlInput" placeholder="输入 SQL 语句...">SELECT o.order_id, o.order_date, c.customer_name, c.city, p.product_name, p.unit_price, cat.category_name, oi.quantity, ROUND(o.order_amount * oi.quantity * 0.95, 2) AS actual_revenue, CASE WHEN oi.quantity >= 5 THEN '批发' ELSE '零售' END AS sale_type
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id
+JOIN order_items oi ON o.order_id = oi.order_id
+JOIN products p ON oi.product_id = p.product_id
+JOIN categories cat ON p.category_id = cat.category_id
+WHERE o.order_date >= '2024-01-01'</textarea>
+  <button id="analyzeBtn" onclick="analyze()">分析血缘</button>
+  <div id="error" class="error"></div>
+</div>
+<div class="right">
+  <svg id="graph"></svg>
+  <div id="tooltip" class="tooltip"></div>
+</div>
+
+<script>
+function analyze() {
+  const btn = document.getElementById('analyzeBtn');
+  const errorEl = document.getElementById('error');
+  btn.disabled = true;
+  errorEl.textContent = '';
+
+  fetch('/lineage', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sql: document.getElementById('sqlInput').value })
+  })
+  .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(data => drawGraph(data.lineage))
+  .catch(e => { errorEl.textContent = '分析失败: ' + e.message; })
+  .finally(() => { btn.disabled = false; });
+}
+
+function drawGraph(lineage) {
+  const svg = d3.select('#graph');
+  svg.selectAll('*').remove();
+  const tooltip = d3.select('#tooltip');
+
+  const nodes = new Map();
+  const links = [];
+  const currentTable = lineage.currentTable || 'result';
+
+  function addTable(name) {
+    if (!nodes.has(name)) {
+      nodes.set(name, { id: name, isCurrent: name === currentTable });
+    }
+  }
+  addTable(currentTable);
+
+  for (const m of lineage.lineageMappings) {
+    addTable(m.upstreamTable);
+    links.push({
+      source: m.upstreamTable,
+      target: currentTable,
+      label: m.currentField + ' ← ' + m.upstreamFields
+    });
+  }
+
+  const nodeArr = Array.from(nodes.values());
+  const width = document.querySelector('.right').clientWidth;
+  const height = document.querySelector('.right').clientHeight;
+
+  const currentIdx = nodeArr.findIndex(n => n.isCurrent);
+  const currentX = width * 0.7;
+  const upstreamX = width * 0.2;
+
+  nodeArr.forEach((n, i) => {
+    if (n.isCurrent) {
+      n.x = currentX;
+      n.y = height / 2;
+    } else {
+      const upstreamNodes = nodeArr.filter(nn => !nn.isCurrent);
+      const idx = upstreamNodes.indexOf(n);
+      const total = upstreamNodes.length;
+      n.x = upstreamX;
+      n.y = height / (total + 1) * (idx + 1);
+    }
+  });
+
+  const g = svg.append('g');
+
+  // zoom
+  const zoom = d3.zoom().on('zoom', (e) => g.attr('transform', e.transform));
+  svg.call(zoom);
+
+  // edges
+  const linkGroup = g.append('g');
+  links.forEach(l => {
+    const src = nodeArr.find(n => n.id === l.source);
+    const tgt = nodeArr.find(n => n.id === l.target);
+    const midX = (src.x + tgt.x) / 2;
+
+    const labelX = (src.x + tgt.x) / 2;
+    const labelY = (src.y + tgt.y) / 2 - 8;
+
+    linkGroup.append('line')
+      .attr('x1', src.x).attr('y1', src.y)
+      .attr('x2', tgt.x).attr('y2', tgt.y)
+      .attr('stroke', '#b0b0b0')
+      .attr('stroke-width', 1.5)
+      .attr('marker-end', 'url(#arrow)');
+
+    linkGroup.append('text')
+      .attr('x', labelX).attr('y', labelY)
+      .attr('text-anchor', 'middle')
+      .attr('font-size', 11)
+      .attr('fill', '#666')
+      .text(l.label);
+  });
+
+  // arrow marker
+  svg.append('defs').append('marker')
+    .attr('id', 'arrow')
+    .attr('viewBox', '0 -5 10 10')
+    .attr('refX', 18).attr('refY', 0)
+    .attr('markerWidth', 6).attr('markerHeight', 6)
+    .attr('orient', 'auto')
+    .append('path')
+    .attr('d', 'M0,-5L10,0L0,5')
+    .attr('fill', '#b0b0b0');
+
+  // nodes
+  nodeArr.forEach(n => {
+    const group = g.append('g').attr('transform', `translate(${n.x},${n.y})`);
+
+    const rect = group.append('rect')
+      .attr('x', -90).attr('y', -24)
+      .attr('width', 180).attr('height', 48)
+      .attr('rx', 6)
+      .attr('fill', n.isCurrent ? '#e8f4e8' : '#e8f0fe')
+      .attr('stroke', n.isCurrent ? '#4caf50' : '#4a90d9')
+      .attr('stroke-width', 2);
+
+    group.append('text')
+      .attr('text-anchor', 'middle')
+      .attr('y', 4)
+      .attr('font-size', 13)
+      .attr('font-weight', 'bold')
+      .attr('fill', '#333')
+      .text(n.id);
+  });
+}
+
+// initial draw
+drawGraph({ currentTable: 'result', lineageMappings: [] });
+</script>
+</body>
+</html>

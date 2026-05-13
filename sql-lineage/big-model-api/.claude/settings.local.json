@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:api-docs.deepseek.com)",
+      "WebSearch",
+      "Bash(pip index *)",
+      "Bash(python3 -m pip index versions fastapi)",
+      "Bash(python3 -m pip index versions uvicorn)",
+      "Bash(python3 -m pip index versions openai)",
+      "Bash(python3 -m pip index versions python-dotenv)",
+      "Bash(python3 *)",
+      "Bash(kill %1)",
+      "Bash(wait)",
+      "Bash(curl -s http://localhost:8000/docs)",
+      "Bash(curl *)",
+      "Bash(pkill -f \"python3 main.py\")",
+      "Bash(kill 16945)",
+      "Bash(mvn compile *)",
+      "Bash(mvn spring-boot:run *)"
+    ]
+  }
+}

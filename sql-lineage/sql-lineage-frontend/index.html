@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL 血缘分析</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="panel">
+  <h2>SQL 血缘分析</h2>
+  <textarea id="sqlInput" placeholder="输入 SQL 语句..."></textarea>
+  <button id="analyzeBtn">分析血缘</button>
+  <div id="error"></div>
+  <details id="thinkingBlock" style="display:none;">
+    <summary>思考过程</summary>
+    <div id="thinkingText"></div>
+  </details>
+</div>
+
+<div class="canvas">
+  <button id="toggleFieldsBtn" class="toggle-btn" onclick="Graph.toggle()" style="display:none;">展开字段</button>
+  <svg id="graph"></svg>
+</div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/graph.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>
