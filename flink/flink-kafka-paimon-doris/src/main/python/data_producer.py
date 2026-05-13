@@ -46,13 +46,15 @@ def main():
         acks=1,
     )
 
-    order_id = 1
+    # 用时间戳 + 随机数保证重启不重复
+    seq = int(time.time() * 1000) % 1000000
     print(f"Producing to topic: {TOPIC}  ({BOOTSTRAP_SERVERS})")
     try:
         while True:
             now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            seq += 1
             payload = {
-                "order_id": order_id,
+                "order_id": seq,
                 "user_id": random.randint(1000, 9999),
                 "product_name": random.choice(PRODUCTS),
                 "price": round(999 + random.random() * 15000, 2),
@@ -63,7 +65,7 @@ def main():
             future = producer.send(TOPIC, value=payload)
             meta = future.get(timeout=10)
             print(f"Sent: offset={meta.offset} partition={meta.partition} | {payload}")
-            order_id += 1
+            pass  # seq auto-incremented above
             time.sleep(2)
     except KeyboardInterrupt:
         print("\nStopped.")

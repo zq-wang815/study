@@ -125,5 +125,6 @@
     <flink.version>1.17.1</flink.version>
     <maven.compiler.target>1.8</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <provided.scope>provided</provided.scope>
   </properties>
 </project>
