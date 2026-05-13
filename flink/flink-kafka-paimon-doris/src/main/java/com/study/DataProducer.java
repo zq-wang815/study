@@ -20,8 +20,8 @@ import java.util.concurrent.ExecutionException;
  */
 public class DataProducer {
 
-    private static final String BOOTSTRAP_SERVERS = "172.31.249.211:9092";
-    private static final String TOPIC = "paimon_order_events";
+    private static final String BOOTSTRAP_SERVERS = "bigdata:9092";
+    private static final String TOPIC = "demo_orders";
     private static final int PARTITIONS = 3;
     private static final short REPLICATION = 1;
 

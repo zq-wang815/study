@@ -16,6 +16,7 @@
         <flink.version>1.17.1</flink.version>
         <paimon.version>0.8.2</paimon.version>
         <scala.binary.version>2.12</scala.binary.version>
+        <provided.scope>provided</provided.scope>
     </properties>
 
     <dependencies>
@@ -24,19 +25,19 @@
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-api-java</artifactId>
             <version>${flink.version}</version>
-            <scope>provided</scope>
+            <scope>${provided.scope}</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-api-java-bridge</artifactId>
             <version>${flink.version}</version>
-            <scope>provided</scope>
+            <scope>${provided.scope}</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-planner_${scala.binary.version}</artifactId>
             <version>${flink.version}</version>
-            <scope>provided</scope>
+            <scope>${provided.scope}</scope>
         </dependency>
 
         <!-- Flink Streaming -->
@@ -44,21 +45,23 @@
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-streaming-java</artifactId>
             <version>${flink.version}</version>
-            <scope>provided</scope>
+            <scope>${provided.scope}</scope>
         </dependency>
 
-        <!-- Flink Kafka Connector -->
+        <!-- Flink Kafka Connector (already in $FLINK_HOME/lib) -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-kafka</artifactId>
             <version>${flink.version}</version>
+            <scope>${provided.scope}</scope>
         </dependency>
 
-        <!-- Flink JSON format -->
+        <!-- Flink JSON format (already in $FLINK_HOME/lib) -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-json</artifactId>
             <version>${flink.version}</version>
+            <scope>${provided.scope}</scope>
         </dependency>
 
         <!-- Flink Client (for local execution) -->
@@ -66,14 +69,15 @@
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-clients</artifactId>
             <version>${flink.version}</version>
-            <scope>provided</scope>
+            <scope>${provided.scope}</scope>
         </dependency>
 
-        <!-- Paimon Flink -->
+        <!-- Paimon Flink (jar must be placed in $FLINK_HOME/lib/) -->
         <dependency>
             <groupId>org.apache.paimon</groupId>
             <artifactId>paimon-flink-1.17</artifactId>
             <version>${paimon.version}</version>
+            <scope>${provided.scope}</scope>
         </dependency>
 
         <!-- Hadoop Client for HDFS access -->
@@ -81,7 +85,7 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
             <version>3.3.4</version>
-            <scope>provided</scope>
+            <scope>${provided.scope}</scope>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>

@@ -1,6 +1,5 @@
 package com.study;
 
-import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
@@ -18,13 +17,13 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
  */
 public class KafkaToPaimon {
 
-    private static final String KAFKA_BROKERS = "172.31.249.211:9092";
-    private static final String TOPIC = "paimon_order_events";
+    private static final String KAFKA_BROKERS = "bigdata:9092";
+    private static final String TOPIC = "demo_orders";
     private static final String CONSUMER_GROUP = "paimon-kafka-to-paimon";
 
     public static void main(String[] args) throws Exception {
         String warehouse = System.getenv().getOrDefault(
-                "PAIMON_WAREHOUSE", "file:///tmp/paimon-warehouse");
+                "PAIMON_WAREHOUSE", "hdfs://bigdata:9000/paimon");
 
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
@@ -33,10 +32,16 @@ public class KafkaToPaimon {
         StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
 
         // ── 1. Create Paimon catalog ──
-        tableEnv.executeSql("CREATE CATALOG IF NOT EXISTS paimon WITH (\n"
+        String catalogDdl = "CREATE CATALOG paimon WITH (\n"
                 + "    'type' = 'paimon',\n"
                 + "    'warehouse' = '" + warehouse + "'\n"
-                + ")");
+                + ")";
+        try {
+            tableEnv.executeSql(catalogDdl);
+        } catch (Exception e) {
+            // catalog may already exist, ignore
+            System.out.println("Catalog may already exist: " + e.getMessage());
+        }
         tableEnv.executeSql("USE CATALOG paimon");
         tableEnv.executeSql("CREATE DATABASE IF NOT EXISTS ods");
         tableEnv.executeSql("USE ods");
@@ -56,7 +61,7 @@ public class KafkaToPaimon {
                 + "    'topic' = '" + TOPIC + "',\n"
                 + "    'properties.bootstrap.servers' = '" + KAFKA_BROKERS + "',\n"
                 + "    'properties.group.id' = '" + CONSUMER_GROUP + "',\n"
-                + "    'scan.startup.mode' = 'latest-offset',\n"
+                + "    'scan.startup.mode' = 'earliest-offset',\n"
                 + "    'format' = 'json',\n"
                 + "    'json.fail-on-missing-field' = 'false',\n"
                 + "    'json.ignore-parse-errors' = 'true'\n"
