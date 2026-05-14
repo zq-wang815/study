@@ -87,11 +87,16 @@ flink-enterprise-realtime-demo
 ├── PROJECT_REQUIREMENTS.md
 ├── README.md
 ├── pom.xml
+├── src/main/java/com/study/realtime/common
+│   ├── AppConfig.java
+│   └── ConnectorSqlOptions.java
 ├── scripts
 │   ├── create_kafka_topics.sh
 │   ├── doris_setup.sql
 │   ├── generate_kafka_events.py
 │   └── mysql_setup.sql
+├── src/main/resources
+│   └── application.properties
 ├── sql
 │   ├── ods_mysql_cdc_to_doris.sql
 │   └── realtime_warehouse.sql
@@ -102,6 +107,21 @@ flink-enterprise-realtime-demo
 ```
 
 ## 5. 部署步骤
+
+### 5.0 配置说明
+
+项目现在采用“默认配置文件 + 外部覆盖”的方式：
+
+- 默认配置文件：`src/main/resources/application.properties`
+- 生产环境可通过 JVM 参数覆盖：
+  - `-Ddemo.config=/path/to/application-prod.properties`
+  - 或直接覆盖单个参数，如 `-Dflink.parallelism=4`
+
+推荐做法：
+
+- 开发环境使用 jar 内默认配置
+- 测试 / 生产环境使用独立的外部配置文件
+- 避免把生产密码和地址直接固化到代码里
 
 ### 5.1 本地打包
 
@@ -123,6 +143,7 @@ scp /Users/autumn/IdeaProjects/study/flink/flink-enterprise-realtime-demo/target
 ssh bigdata 'cd /opt/module/flink-enterprise-realtime-demo && \
 /opt/module/flink-1.17.1/bin/flink run-application -t yarn-application \
 -Dyarn.application.name=rt-demo-ods-mysql-cdc \
+-Ddemo.config=/opt/module/flink-enterprise-realtime-demo/conf/application-prod.properties \
 -c com.study.realtime.jobs.OdsMysqlCdcToDorisJob \
 target/flink-enterprise-realtime-demo.jar'
 ```
@@ -133,6 +154,7 @@ target/flink-enterprise-realtime-demo.jar'
 ssh bigdata 'cd /opt/module/flink-enterprise-realtime-demo && \
 /opt/module/flink-1.17.1/bin/flink run-application -t yarn-application \
 -Dyarn.application.name=rt-demo-main-pipeline \
+-Ddemo.config=/opt/module/flink-enterprise-realtime-demo/conf/application-prod.properties \
 -Djobmanager.memory.process.size=1024m \
 -Dtaskmanager.memory.process.size=1024m \
 -c com.study.realtime.jobs.RealtimeWarehouseJob \
@@ -208,6 +230,8 @@ YARN 状态：
 ## 8. 生产实现建议
 
 - ODS 维表同步与主实时任务拆开部署，便于故障隔离
+- Flink 运行参数、数据源地址、账号密码统一配置化，不在 Job 类里硬编码
+- 生产环境建议为不同环境维护独立配置文件，例如 `application-dev.properties`、`application-test.properties`、`application-prod.properties`
 - Kafka 事件主题建议按业务域继续细分
 - 维表实时性要求极高时，可评估升级 Flink 版本或切换到更完善的维表存储方案
 - 当前 Demo 适合作为实时数仓最小闭环样板，后续可以继续扩展：
