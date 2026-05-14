@@ -20,6 +20,8 @@
 
 - [Paimon Partial-Update 场景文档：用户画像宽表](./docs/partial-update-user-profile.md)
 
+- [Paimon Partial-Update 简明示例：订单宽表](./docs/partial-update-order-wide-table.md)
+
 ## 环境
 
 | 组件 | 版本 | 地址 |
